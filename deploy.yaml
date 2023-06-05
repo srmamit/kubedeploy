@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: fapi
+  name: response-tester # <- Dynamic
+  namespace: ns01
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fapi-deployment
+  template:
+    metadata:
+      labels:
+        app: fapi-deployment
+    spec:
+      containers:
+        - image: ghcr.io/mynamespace/fapi:2.1.0
+          name: fapi-docker-image
+          resources:
+            limits:
+              cpu: 1m
+              memory: 500Mi
+            requests:
+              cpu: 1m
+              memory: 350Mi
+          ports:
+            - containerPort: 443
+      imagePullSecrets:
+        - name: default-docker-reg
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fapi-service
+  namespace: ns01
+spec:
+  selector:
+    app: fapi-deployment
+  ports:
+    - port: 443
+      targetPort: 443
+  type: LoadBalancer
